@@ -1,7 +1,6 @@
 const { prompt } = require("inquirer");
 const logo = require("asciiart-logo");
 const db = require("./db");
-const { init } = require("express/lib/application");
 require("console.table");
 
 init();
@@ -182,7 +181,43 @@ async function updateEmployeeRole() {
     loadMainPrompts();
 }
 
-updateEmployeeManager
+async function updateEmployeeManager() {
+    const employees = await db.findAllEmployees();
+
+    const employeeChoices = employees.map(({id, first_name, last_name }) => ({
+        name: `${first_name} ${last_name}`,
+        value: id
+    }));
+
+    const { employeeId } = await prompt ([
+        {
+            type: "list",
+            name: "employeeId",
+            message: "Which employee's manager would you like to update?",
+            choices: employeeChoices
+        }
+    ]);
+    console.log("MANAGERS");
+    const managers = await db.findAllPossibleManagers(employeeId);
+    console.log(managers);
+    const managerChoices = managers.map((id, first_name, last_name) => ({
+        name: `${first_name} ${last_name}`,
+        value: id
+    }));
+
+    const { managerId } = await prompt ([
+        {
+            type: "list",
+            name: "managerId",
+            message: "Which employee do you want to assign a manager?",
+            choices: managerChoices
+        }
+    ]);
+
+    await db.updateEmployeeManager(employeeId, managerId);
+
+    loadMainPrompts();
+}
 
 viewRoles
 
