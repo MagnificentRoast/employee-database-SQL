@@ -12,6 +12,11 @@ const db = mysql.createConnection(
         host: 'localhost',
         user: 'root',
         password: '1Er@f!?xAqIii@b',
-        database: ''
+        database: 'employees'
     }
 )
+
+app.listen(PORT, () => {
+    console.log(`Port ${PORT} activated.`)
+})
+
