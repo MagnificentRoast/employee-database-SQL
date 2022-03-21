@@ -20,7 +20,7 @@ async function loadMainPrompts() {
             type: "list",
             message: "What would you like to do?",
             name: "choice",
-            choises: [
+            choices: [
                 {
                     type: "input",
                     name: "View all Employees",
@@ -219,18 +219,159 @@ async function updateEmployeeManager() {
     loadMainPrompts();
 }
 
-viewRoles
+async function viewRoles() {
+    const roles = await db.findAllRoles();
 
-removeRole
+    console.log();
+    console.table(roles);
 
-viewDepartments
+    loadMainPrompts();
+}
 
-addDepartments
+async function addRole() {
+    console.log("DEPARTMENTS")
+    const departments = await db.findAllDepartments();
+    console.log(departments);
+    const departmentChoices = departments.map(({ id, name }) => ({
+        name: name,
+        value: id
+    }));
 
-removeDepartment
+    const role = await prompt ([
+        {
+            name: "title",
+            message: "What is your role?"
+        },
+        {
+            name: "salary",
+            message: "What is your salary?"
+        },
+        {
+            type: "list",
+            name: "department_id",
+            message: "Which department are you in?",
+            choices: departmentChoices
+        }
+    ]);
 
-addEmployees
+    await db.createRole(role);
+
+    loadMainPrompts();
+}
+
+async function removeRole() {
+    const roles = await db.findAllRoles();
+
+    const roleChoices = roles.map(({ id, title }) => ({
+        name: title,
+        value: id
+    }));
+
+    const { roleId } = await prompt ([
+        {
+            type: "list",
+            name: "roleId",
+            message: "Which role do you want to remove? (THIS IS PERMANENT)",
+            choices: roleChoices
+        }
+    ]);
+
+    await db.removeRole(roleId);
+
+    loadMainPrompts();
+}
+
+async function viewDepartments() {
+    const departments = await db.findAllDepartments();
+
+    console.table(departments);
+
+    loadMainPrompts();
+}
+
+async function addDepartments() {
+    const department = await prompt([
+        {
+            name: "name",
+            message: "What is the name of the department?"
+        }
+    ]);
+
+    await db.createDepartment(department);
+
+    loadMainPrompts();
+}
+
+async function removeDepartment() {
+    const department = await db.findAllDepartments();
+
+    const departmentChoices = department.map(({ id, name }) => ({
+        name: name,
+        value: id
+    }));
+
+    const {departmentId} = await prompt ({
+        type: "list",
+        name: "departmentId",
+        message: "Which department would you like to remove? This will remove associated roles and employees!",
+        choices: departmentChoices
+    })
+
+    await db.removeDepartment(departmentId);
+
+    loadMainPrompts();
+}
+
+async function addEmployees() {
+    const roles = await db.findAllRoles();
+    const employees = await db.findAllEmployees();
+
+    const employee = await prompt ([
+        {
+            name: "first_name",
+            message: "What is your employee's first name?"
+        },
+        {
+            name: "last_name",
+            message: "What is your employee's last name?"
+        },
+    ]);
+
+    const roleChoices = roles.map(({ id, title }) => ({
+        name: title,
+        value: id
+    }));
+
+    const roleId = await prompt ({
+        type: "list",
+        name: "roleId",
+        message: "What is your employee's role?",
+        choices: roleChoices
+    });
+
+    employee.role_id = roleId;
+
+    const managerChoices = employees.map(({ id, first_name, last_name }) => ({
+        name: `${first_name} ${last_name}`,
+        value: id
+    }));
+    managerChoices.unshift({ name: "None", value: null});
+
+    const { managerId } = await prompt ({
+        type: "list",
+        name: "mangerId",
+        message: "What is your employee's manager?",
+        choices: managerChoices
+    });
+
+    employee.manager_id = managerId;
+
+    await db.createEmployee(employee);
+
+    loadMainPrompts();
+}
 
 function quit(){
     console.log("bye")
+    process.exit();
 }
